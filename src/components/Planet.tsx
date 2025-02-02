@@ -1,25 +1,19 @@
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { Mesh } from 'three';
 import { PlanetInfo } from './PlanetData';
 
-const AU_SCALE = 20; // 1 AU = 20 units in our 3D scene
-const EARTH_RADIUS = 1; // Earth radius in 3D units (so Earth's diameter is ~2 in this scene)
+const AU_SCALE = 20;
+const EARTH_RADIUS = 1;
 
-type PlanetProps = {
+interface PlanetProps {
   data: PlanetInfo;
-};
+}
 
-export default function Planet({ data }: PlanetProps) {
-  const meshRef = useRef<THREE.Mesh>(null);
-
-  // We compute the angular speed based on the orbital period in Earth years.
-  // We'll say 1 Earth year = 2 * PI in angle. If planet has period T, speed = (2*pi)/T.
+const Planet: React.FC<PlanetProps> = ({ data }) => {
+  const meshRef = useRef<Mesh>(null);
   const orbitalSpeed = (2 * Math.PI) / data.orbitalPeriodEarthYears;
-
-  // Scale orbit radius
   const orbitRadius = data.orbitRadiusAU * AU_SCALE;
-  // Scale planet radius
   const planetRadius = data.sizeRelativeToEarth * EARTH_RADIUS;
 
   useFrame(({ clock }) => {
@@ -37,4 +31,6 @@ export default function Planet({ data }: PlanetProps) {
       <meshStandardMaterial color={data.color} />
     </mesh>
   );
-}
+};
+
+export default Planet;
