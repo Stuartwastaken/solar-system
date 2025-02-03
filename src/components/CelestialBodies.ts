@@ -1,12 +1,13 @@
 export interface CelestialBody {
   name: string;
   color: string;
-  orbitRadiusAU: number;          // In astronomical units
+  orbitRadiusAU: number;          // in astronomical units
   sizeRelativeToEarth: number;    // Earth = 1.0
   orbitalPeriodEarthYears: number; // 0 for the Sun
-  mass: number;                   // Arbitrary units (for gravitational dip)
-  angularSpeed: number;           // Pre-computed as (2π/period) [0 if period==0]
+  mass: number;                   // arbitrary units (for gravitational dip)
+  angularSpeed: number;           // pre-computed as (2π/period); 0 if period==0
 }
+
 export const AU_SCALE = 20;
 
 export const BODIES: CelestialBody[] = [
@@ -14,7 +15,7 @@ export const BODIES: CelestialBody[] = [
     name: 'Sun',
     color: 'orange',
     orbitRadiusAU: 0,
-    sizeRelativeToEarth: 10, // chosen for visual convenience
+    sizeRelativeToEarth: 10,
     orbitalPeriodEarthYears: 0,
     mass: 300,
     angularSpeed: 0,
