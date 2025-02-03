@@ -3,18 +3,18 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import SolarSystem from '../src/components/SolarSystem';
 import LagrangeVertices from '../src/components/LagrangeVertices';
+import SceneBackground from './SceneBackground'; 
 
 const App: React.FC = () => {
   const [slowTime, setSlowTime] = useState(true);
   const [showLagrangePoints, setShowLagrangePoints] = useState(false);
-  const [startTransferPath, setStartTransferPath] = useState(true);
+  const [startTransferPath, setStartTransferPath] = useState(false);
+
   // When slowTime is enabled, simulation runs at 1/10 speed.
   const timeScale = slowTime ? 0.02 : 0.2;
 
   return (
- 
     <div style={{ width: '100vw', height: '100vh' }}>
-
 
       {/* Top-right UI toggles */}
       <div style={{
@@ -38,7 +38,7 @@ const App: React.FC = () => {
             Slow Time
           </label>
         </div>
-        <div style={{ marginTop: '10px' }}>
+        {/* <div style={{ marginTop: '10px' }}>
           <label>
             <input 
               type="checkbox" 
@@ -48,7 +48,7 @@ const App: React.FC = () => {
             />
             Start Mars Transfer
           </label>
-        </div>
+        </div> */}
         <div style={{ marginTop: '10px' }}>
           <label>
             <input 
@@ -63,11 +63,24 @@ const App: React.FC = () => {
       </div>
       
       <Canvas camera={{ position: [0, 200, 500], fov: 60, near: 0.1, far: 200000 }}>
-        {/* Optional: Background stars, etc. */}
+        {/* SceneBackground sets scene.background to your starfield image */}
+        <SceneBackground />
+
         <ambientLight intensity={0.2} />
         <pointLight intensity={1.2} position={[0, 0, 0]} />
-        <SolarSystem timeScale={timeScale} showLagrangePoints={showLagrangePoints} startTransferPath={startTransferPath} />
-        {showLagrangePoints && <LagrangeVertices timeScale={timeScale} visible={showLagrangePoints} />}
+        
+        <SolarSystem
+          timeScale={timeScale}
+          showLagrangePoints={showLagrangePoints}
+          startTransferPath={startTransferPath}
+        />
+        {showLagrangePoints && (
+          <LagrangeVertices
+            timeScale={timeScale}
+            visible={showLagrangePoints}
+          />
+        )}
+
         <OrbitControls minDistance={10} maxDistance={200000} />
       </Canvas>
     </div>
