@@ -2,14 +2,14 @@ import React from 'react';
 import Sun from './Sun';
 import Planet from './Planet';
 import GravityGrid from './GravityGrid';
-import { PLANETS } from './PlanetData';
+import { BODIES } from './CelestialBodies';
 
 const SolarSystem: React.FC = () => {
   return (
     <>
       <Sun />
-      {PLANETS.map((planet) => (
-        <Planet key={planet.name} data={planet} />
+      {BODIES.filter(body => body.name !== 'Sun').map((body) => (
+        <Planet key={body.name} body={body} />
       ))}
       <GravityGrid />
     </>
