@@ -5,6 +5,11 @@ import * as THREE from 'three';
 
 const NUM_BODIES = 9;
 
+// Create a custom shader material.
+// We calculate a warp factor (vWarp) that is 1.0 - exp(-displacement * factor),
+// which gives a rounded, non-linear response.
+// That warp factor is applied along the Z-axis, and passed to the fragment shader
+// so that deeper (more warped) regions are rendered in a darker shade.
 const GravityGridMaterial = shaderMaterial(
   {
     planetPositions: new Array(NUM_BODIES).fill(new THREE.Vector3()),
@@ -12,37 +17,43 @@ const GravityGridMaterial = shaderMaterial(
     numPlanets: NUM_BODIES,
     time: 0.0
   },
-  // Vertex Shader – now we add the gravitational displacement to pos.z
+  // Vertex Shader
   `
     #define NUM_BODIES ${NUM_BODIES}
     uniform vec3 planetPositions[NUM_BODIES];
     uniform float planetMasses[NUM_BODIES];
     uniform int numPlanets;
     uniform float time;
-    varying float vDisplacement;
+    varying float vWarp;
     
     void main() {
       vec3 pos = position;
       float displacement = 0.0;
-      // Compute a contribution from each body based on its mass and distance
+      // Sum contributions from each body based on mass / (distance+1)
       for (int i = 0; i < NUM_BODIES; i++) {
         if (i < numPlanets) {
-          // Since our plane is in the XY plane, use pos.x and pos.y for distance.
+          // Our grid lies in the XY plane so we compare pos.x, pos.y.
           float d = distance(vec2(pos.x, pos.y), vec2(planetPositions[i].x, planetPositions[i].y));
           displacement += planetMasses[i] / (d + 1.0);
         }
       }
-      // Apply the displacement along the Z axis (depth)
-      pos.z += displacement;
-      vDisplacement = displacement;
+      // Compute a rounded warp factor.
+      // The constant 0.1 sets the sensitivity; adjust as needed.
+      float warp = 1.0 - exp(-displacement * 0.1);
+      // Apply the warp along the Z axis.
+      // The constant 100.0 scales the maximum warp depth.
+      pos.z += warp * 100.0;
+      vWarp = warp;
       gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
     }
   `,
-  // Fragment Shader – output a simple grey color
+  // Fragment Shader
   `
-    varying float vDisplacement;
+    varying float vWarp;
     void main() {
-      gl_FragColor = vec4(vec3(0.5), 1.0);
+      // Mix from light grey (0.8) to dark grey (0.2) as warp increases.
+      float shade = mix(0.8, 0.2, vWarp);
+      gl_FragColor = vec4(vec3(shade), 1.0);
     }
   `
 );
@@ -86,7 +97,7 @@ const GravityGrid: React.FC = () => {
     const masses: number[] = [];
     bodies.forEach((body) => {
       const angle = body.angularSpeed * t + body.initialAngle;
-      // For our grid (in the XY plane) we use (x,y)
+      // Compute each body's position in the XY plane.
       const x = body.orbitRadius * Math.cos(angle);
       const y = body.orbitRadius * Math.sin(angle);
       positions.push(new THREE.Vector3(x, y, 0));
@@ -101,11 +112,11 @@ const GravityGrid: React.FC = () => {
   });
 
   return (
-    
+    // This mesh lies flat in the XY plane. Adjust rotation/position as needed.
     <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, -15, 0]}>
-      {/* Large plane: 1000 x 1000 with subdivisions for finer warping */}
+      {/* A large plane with subdivisions for detailed warping */}
       <planeGeometry args={[1000, 1000, 20, 20]} />
-      {/* Render as a wireframe (transparent grid with grey lines) */}
+      {/* Render in wireframe for a transparent grid look */}
       <gravityGridMaterial
         ref={materialRef}
         side={THREE.DoubleSide}
