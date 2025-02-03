@@ -1,47 +1,52 @@
-import React from 'react';
-import { extend, Object3DNode } from '@react-three/fiber';
+import React, { useRef } from 'react';
+import { useFrame, extend, Object3DNode } from '@react-three/fiber';
 import { shaderMaterial } from '@react-three/drei';
 import * as THREE from 'three';
 
-// Create a custom shader material for a conical (rounded) depression.
-// Uniforms:
-//   dipRadius: the radius within which the grid is warped (e.g., 500)
-//   maxDip: the maximum depth at the center (e.g., dipRadius * tan(θ) with θ ≈ 0.3 radians)
+const NUM_BODIES = 9;
+
 const GravityGridMaterial = shaderMaterial(
   {
-    dipRadius: 500.0,
-    maxDip: 154.65, // 500 * tan(0.3) ≈ 154.65
+    planetPositions: new Array(NUM_BODIES).fill(new THREE.Vector3()),
+    planetMasses: new Array(NUM_BODIES).fill(0.0),
+    numPlanets: NUM_BODIES,
+    time: 0.0
   },
-  // Vertex Shader
+  // Vertex Shader – now we add the gravitational displacement to pos.z
   `
-    uniform float dipRadius;
-    uniform float maxDip;
+    #define NUM_BODIES ${NUM_BODIES}
+    uniform vec3 planetPositions[NUM_BODIES];
+    uniform float planetMasses[NUM_BODIES];
+    uniform int numPlanets;
+    uniform float time;
+    varying float vDisplacement;
+    
     void main() {
       vec3 pos = position;
-      // Compute radial distance from the center (the sun)
-      float r = length(vec2(pos.x, pos.z));
-      float dip = 0.0;
-      if (r < dipRadius) {
-        // Computse a smooth falloff: at r=0, factor = 1; at r=dipRadius, factor = 0.
-        float factor = 1.0 - (r / dipRadius);
-        // Use a quadratic falloff for a rounded shape.
-        dip = maxDip * factor * factor;
+      float displacement = 0.0;
+      // Compute a contribution from each body based on its mass and distance
+      for (int i = 0; i < NUM_BODIES; i++) {
+        if (i < numPlanets) {
+          // Since our plane is in the XY plane, use pos.x and pos.y for distance.
+          float d = distance(vec2(pos.x, pos.y), vec2(planetPositions[i].x, planetPositions[i].y));
+          displacement += planetMasses[i] / (d + 1.0);
+        }
       }
-      // Lower the vertex by the computed dip
-      pos.y -= dip;
+      // Apply the displacement along the Z axis (depth)
+      pos.z += displacement * 50.0;
+      vDisplacement = displacement;
       gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
     }
   `,
-  // Fragment Shader
+  // Fragment Shader – output a simple grey color
   `
+    varying float vDisplacement;
     void main() {
-      // Render a constant grey color.
-      gl_FragColor = vec4(0.5, 0.5, 0.5, 1.0);
+      gl_FragColor = vec4(vec3(0.5), 1.0);
     }
   `
 );
 
-// Extend the JSX namespace so we can use <gravityGridMaterial />
 extend({ GravityGridMaterial });
 
 declare global {
@@ -52,16 +57,62 @@ declare global {
   }
 }
 
+interface Body {
+  name: string;
+  mass: number;
+  orbitRadius: number;
+  angularSpeed: number;
+  initialAngle: number;
+}
+
+const bodies: Body[] = [
+  { name: 'Sun',     mass: 300,   orbitRadius: 0,  angularSpeed: 0.0,  initialAngle: 0 },
+  { name: 'Mercury', mass: 0.055, orbitRadius: 10, angularSpeed: 0.5,  initialAngle: 0 },
+  { name: 'Venus',   mass: 0.815, orbitRadius: 15, angularSpeed: 0.4,  initialAngle: 1 },
+  { name: 'Earth',   mass: 1.0,   orbitRadius: 20, angularSpeed: 0.3,  initialAngle: 2 },
+  { name: 'Mars',    mass: 0.107, orbitRadius: 25, angularSpeed: 0.25, initialAngle: 3 },
+  { name: 'Jupiter', mass: 317.8, orbitRadius: 35, angularSpeed: 0.15, initialAngle: 4 },
+  { name: 'Saturn',  mass: 95.2,  orbitRadius: 45, angularSpeed: 0.1,  initialAngle: 5 },
+  { name: 'Uranus',  mass: 14.5,  orbitRadius: 55, angularSpeed: 0.07, initialAngle: 6 },
+  { name: 'Neptune', mass: 17.1,  orbitRadius: 65, angularSpeed: 0.05, initialAngle: 7 }
+];
+
 const GravityGrid: React.FC = () => {
+  const materialRef = useRef<THREE.ShaderMaterial>(null);
+
+  useFrame((state) => {
+    const t = state.clock.getElapsedTime();
+    const positions: THREE.Vector3[] = [];
+    const masses: number[] = [];
+    bodies.forEach((body) => {
+      const angle = body.angularSpeed * t + body.initialAngle;
+      // For our grid (in the XY plane) we use (x,y)
+      const x = body.orbitRadius * Math.cos(angle);
+      const y = body.orbitRadius * Math.sin(angle);
+      positions.push(new THREE.Vector3(x, y, 0));
+      masses.push(body.mass);
+    });
+    if (materialRef.current) {
+      materialRef.current.uniforms.planetPositions.value = positions;
+      materialRef.current.uniforms.planetMasses.value = masses;
+      materialRef.current.uniforms.numPlanets.value = bodies.length;
+      materialRef.current.uniforms.time.value = t;
+    }
+  });
+
   return (
-    // Rotate the mesh so that the grid lies flat in the XZ plane.
-    // Here we use a very large plane (10000 x 10000) with many subdivisions.
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -10, 0]}>
-      <planeGeometry args={[10000, 10000, 200, 200]} />
-      {/* Render as wireframe for a transparent grid look */}
+    // No rotation—this grid lies flat in the XY plane.
+    <mesh position={[0, 0, 0]}>
+      {/* Large plane: 1000 x 1000 with subdivisions for finer warping */}
+      <planeGeometry args={[1000, 1000, 20, 20]} />
+      {/* Render as a wireframe (transparent grid with grey lines) */}
       <gravityGridMaterial
-        wireframe={true}
+        ref={materialRef}
         side={THREE.DoubleSide}
+        wireframe={true}
+        polygonOffset
+        polygonOffsetFactor={1}
+        polygonOffsetUnits={1}
       />
     </mesh>
   );
