@@ -32,24 +32,25 @@ const GravityGridMaterial = shaderMaterial(
       for (int i = 0; i < NUM_BODIES; i++) {
         if (i < numPlanets) {
           float d = distance(vec2(pos.x, pos.z), vec2(planetPositions[i].x, planetPositions[i].z));
-          displacement += planetMasses[i] / (d + 1.0);
-        }
+          displacement += sqrt(planetMasses[i]*1.11) / (d + 5.0);
+          }
       }
       // Compute a non-linear warp factor. Adjust sensitivity with 0.05.
-      float warp = 1.0 - exp(-displacement * 0.05);
+      float warp = 1.0 - exp(-displacement * 0.08);
       warp = sqrt(warp); // Smooth the warp so it's less pointy.
       // Apply the warp as a vertical dip (on y)
-      pos.y -= warp * 100.0;
+      pos.y -= warp * 150.0;
       vWarp = warp;
       
       gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-    }`
+    }
+      `
   ,
   // Fragment Shader – mix between light grey and dark grey based on warp depth.
   
    ` varying float vWarp;
     void main() {
-      float shade = mix(0.6, 0.1, vWarp);
+      float shade = mix(0.6, 0.01, vWarp);
       gl_FragColor = vec4(vec3(shade), 1.0);
     }
   `

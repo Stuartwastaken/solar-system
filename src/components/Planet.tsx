@@ -4,7 +4,7 @@ import { Mesh } from 'three';
 import { CelestialBody } from './CelestialBodies';
 import { Html, useTexture } from '@react-three/drei';
 
-const AU_SCALE = 20; // 1 AU equals 20 scene units
+const AU_SCALE = 50; // 1 AU equals 20 scene units
 
 interface PlanetProps {
   body: CelestialBody;

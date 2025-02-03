@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import SolarSystem from '../src/components/SolarSystem';
+import BackgroundStars from './BackgroundStars';
 
 const App: React.FC = () => {
   const [slowTime, setSlowTime] = useState(true);
@@ -32,6 +33,7 @@ return (
         </label>
       </div>
     <Canvas camera={{ position: [0, 40, 100], fov: 60 }}>
+
       <ambientLight intensity={0.2} />
       <pointLight intensity={1.2} position={[0, 0, 0]} />
       <SolarSystem timeScale={timeScale} />

@@ -8,7 +8,7 @@ export interface CelestialBody {
   angularSpeed: number;           // pre-computed as (2π/period); 0 if period==0
 }
 
-export const AU_SCALE = 20;
+export const AU_SCALE = 50;
 
 export const BODIES: CelestialBody[] = [
   {
