@@ -7,6 +7,7 @@ import LagrangeVertices from '../src/components/LagrangeVertices';
 const App: React.FC = () => {
   const [slowTime, setSlowTime] = useState(true);
   const [showLagrangePoints, setShowLagrangePoints] = useState(false);
+  const [startTransferPath, setStartTransferPath] = useState(true);
   // When slowTime is enabled, simulation runs at 1/10 speed.
   const timeScale = slowTime ? 0.02 : 0.2;
 
@@ -41,6 +42,17 @@ const App: React.FC = () => {
           <label>
             <input 
               type="checkbox" 
+              checked={startTransferPath} 
+              onChange={(e) => setStartTransferPath(e.target.checked)}
+              style={{ marginRight: '8px' }}
+            />
+            Start Mars Transfer
+          </label>
+        </div>
+        <div style={{ marginTop: '10px' }}>
+          <label>
+            <input 
+              type="checkbox" 
               checked={showLagrangePoints} 
               onChange={(e) => setShowLagrangePoints(e.target.checked)}
               style={{ marginRight: '8px' }}
@@ -54,7 +66,7 @@ const App: React.FC = () => {
         {/* Optional: Background stars, etc. */}
         <ambientLight intensity={0.2} />
         <pointLight intensity={1.2} position={[0, 0, 0]} />
-        <SolarSystem timeScale={timeScale} showLagrangePoints={showLagrangePoints} />
+        <SolarSystem timeScale={timeScale} showLagrangePoints={showLagrangePoints} startTransferPath={startTransferPath} />
         {showLagrangePoints && <LagrangeVertices timeScale={timeScale} visible={showLagrangePoints} />}
         <OrbitControls minDistance={10} maxDistance={200000} />
       </Canvas>
