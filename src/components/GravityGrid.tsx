@@ -33,7 +33,7 @@ const GravityGridMaterial = shaderMaterial(
         }
       }
       // Apply the displacement along the Z axis (depth)
-      pos.z += displacement * 50.0;
+      pos.z += displacement;
       vDisplacement = displacement;
       gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
     }
@@ -101,8 +101,8 @@ const GravityGrid: React.FC = () => {
   });
 
   return (
-    // No rotation—this grid lies flat in the XY plane.
-    <mesh position={[0, 0, 0]}>
+    
+    <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, -15, 0]}>
       {/* Large plane: 1000 x 1000 with subdivisions for finer warping */}
       <planeGeometry args={[1000, 1000, 20, 20]} />
       {/* Render as a wireframe (transparent grid with grey lines) */}
