@@ -50,7 +50,7 @@ const GravityGridMaterial = shaderMaterial(
   
    ` varying float vWarp;
     void main() {
-      float shade = mix(0.6, 0.01, vWarp);
+      float shade = mix(0.6, 0.01, (vWarp * 1.2));
       gl_FragColor = vec4(vec3(shade), 1.0);
     }
   `
@@ -105,7 +105,7 @@ const GravityGrid: React.FC<GravityGridProps> = ({ timeScale }) => {
   return (
     // The grid is positioned beneath the solar system.
     <mesh position={[0, 25, 0]}>
-      <planeGeometry ref={geometryRef} args={[3000, 3000, 1000, 1000]} />
+      <planeGeometry ref={geometryRef} args={[3200, 3200, 1000, 1000]} />
       <gravityGridMaterial
         ref={materialRef}
         side={THREE.DoubleSide}

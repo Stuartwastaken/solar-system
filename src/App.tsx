@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import SolarSystem from '../src/components/SolarSystem';
-import BackgroundStars from './BackgroundStars';
+
 
 const App: React.FC = () => {
   const [slowTime, setSlowTime] = useState(true);
-  // When slowTime is enabled, the simulation runs at 1/10th speed.
-  const timeScale = slowTime ? 0.1 : 1.0;
+  // When slowTime is enabled, the simulation runs at 1/50th speed.
+  const timeScale = slowTime ? 0.02 : 0.2;
 
 return (
   <div style={{ width: '100vw', height: '100vh' }}>
@@ -32,7 +32,12 @@ return (
           Slow Time
         </label>
       </div>
-    <Canvas camera={{ position: [0, 40, 100], fov: 60 }}>
+    <Canvas camera={{
+    fov: 60,
+    near: 0.1,
+    far: 100000, // something large enough to encompass your entire scene
+    position: [0, 200, 500],
+  }}>
 
       <ambientLight intensity={0.2} />
       <pointLight intensity={1.2} position={[0, 0, 0]} />
