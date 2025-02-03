@@ -3,12 +3,11 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import SolarSystem from "../src/components/SolarSystem";
 import LagrangeVertices from "../src/components/LagrangeVertices";
-import TransferPath from "../src/components/TransferPath";
 import SceneBackground from "../src/components/SceneBackground";
 import DemoCamera from "../src/components/DemoCamera";
 
 const App: React.FC = () => {
-  const [slowTime, setSlowTime] = useState(true);
+  const [slowTime, setSlowTime] = useState(false);
   const [showLagrangePoints, setShowLagrangePoints] = useState(false);
   const [tourMode, setTourMode] = useState(true);
   // When slowTime is enabled, simulation runs slower.
@@ -83,8 +82,9 @@ const App: React.FC = () => {
         )}
         {tourMode ? (
           <DemoCamera
+            segmentDuration={5}
             orbitRadius={150}
-            orbitSpeed={10.0} // Faster orbiting for a quicker demo
+            orbitSpeed={3.0}
             zoomAmplitude={50}
             zoomSpeed={1.0}
             verticalOffset={50}
